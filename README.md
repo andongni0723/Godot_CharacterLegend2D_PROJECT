@@ -19,7 +19,7 @@
 
 #### Move
 
-```csharp=
+```csharp
 public override void _PhysicsProcess(double delta)
 {
     // Input
@@ -43,7 +43,7 @@ public override void _PhysicsProcess(double delta)
 
 #### Jump
 
-```csharp=
+```csharp
 //...
 public override void _PhysicsProcess(double delta)
 {
@@ -78,7 +78,7 @@ public override void _PhysicsProcess(double delta)
 
 
 #### Animation
-```csharp=
+```csharp
 public override void _PhysicsProcess(double delta)
 {
     // Animation
