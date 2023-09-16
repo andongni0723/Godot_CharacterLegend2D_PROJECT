@@ -3,8 +3,10 @@ using System;
 
 public partial class PlayerController : CharacterBody2D
 {
-	private const float RUN_SPEED = 200f;
-	private const float JUMP_SPEED = 300f;
+	private const float RUN_SPEED = 160f;
+	private const float JUMP_SPEED = 350f;
+	private const float FLOOR_ACCELERATION = RUN_SPEED / 0.2f;
+	private const float AIR_ACCELERATION = RUN_SPEED / 0.02f;
 	private float _gravity = ProjectSettings.GetSetting("physics/2d/default_gravity").AsSingle();
 	
 	// Components
@@ -17,7 +19,9 @@ public partial class PlayerController : CharacterBody2D
 		float _direction = Input.GetAxis("move_left", "move_right");
 
 		// Run
-		Velocity = new Vector2(_direction * RUN_SPEED,
+		float _acceleration = IsOnFloor() ? FLOOR_ACCELERATION : AIR_ACCELERATION;
+		
+		Velocity = new Vector2(Mathf.MoveToward(Velocity.X, _direction * RUN_SPEED, _acceleration * (float)delta),
 			Velocity.Y + _gravity * (float)delta);
 
 		// Jump
@@ -29,7 +33,8 @@ public partial class PlayerController : CharacterBody2D
 		// Animation
 		if (IsOnFloor())
 		{
-			_animationPlayer.Play(_direction != 0 ? "running" : "idle");
+			_animationPlayer.Play(Mathf.IsZeroApprox(_direction) && Mathf.IsZeroApprox(Velocity.X) ?
+				"idle" : "running");
 		}
 		else
 		{
