@@ -354,6 +354,7 @@ motion_mirroring = Vector2(480, 2.08165e-12)
 [node name="Sky Sprite" type="Sprite2D" parent="Decorations/Background/Sky"]
 texture = ExtResource("4_mf2dm")
 centered = false
+metadata/_edit_lock_ = true
 
 [node name="Hills" type="ParallaxLayer" parent="Decorations/Background"]
 motion_scale = Vector2(0.5, 0.2)
@@ -365,6 +366,7 @@ texture = ExtResource("5_ropn6")
 centered = false
 region_enabled = true
 region_rect = Rect2(800, 0, 96, 248)
+metadata/_edit_lock_ = true
 
 [node name="0" type="Sprite2D" parent="Decorations/Background/Hills"]
 position = Vector2(96, 2.08165e-12)
@@ -372,6 +374,7 @@ texture = ExtResource("5_ropn6")
 centered = false
 region_enabled = true
 region_rect = Rect2(800, 0, 96, 256)
+metadata/_edit_lock_ = true
 
 [node name="1" type="Sprite2D" parent="Decorations/Background/Hills"]
 position = Vector2(192, 2.08165e-12)
@@ -379,6 +382,7 @@ texture = ExtResource("5_ropn6")
 centered = false
 region_enabled = true
 region_rect = Rect2(800, 0, 96, 256)
+metadata/_edit_lock_ = true
 
 [node name="2" type="Sprite2D" parent="Decorations/Background/Hills"]
 position = Vector2(287, 2.08165e-12)
@@ -386,6 +390,7 @@ texture = ExtResource("5_ropn6")
 centered = false
 region_enabled = true
 region_rect = Rect2(800, 0, 96, 256)
+metadata/_edit_lock_ = true
 
 [node name="3" type="Sprite2D" parent="Decorations/Background/Hills"]
 position = Vector2(383, 2.08165e-12)
@@ -393,6 +398,7 @@ texture = ExtResource("5_ropn6")
 centered = false
 region_enabled = true
 region_rect = Rect2(800, 0, 96, 256)
+metadata/_edit_lock_ = true
 
 [node name="Tree" type="ParallaxLayer" parent="Decorations/Background"]
 position = Vector2(-1, 0)
@@ -404,27 +410,32 @@ position = Vector2(48, 179)
 texture = ExtResource("5_ropn6")
 region_enabled = true
 region_rect = Rect2(112, 0, 96, 256)
+metadata/_edit_lock_ = true
 
 [node name="1" type="Sprite2D" parent="Decorations/Background/Tree"]
 position = Vector2(144, 179)
 texture = ExtResource("5_ropn6")
 region_enabled = true
 region_rect = Rect2(112, 0, 96, 256)
+metadata/_edit_lock_ = true
 
 [node name="2" type="Sprite2D" parent="Decorations/Background/Tree"]
 position = Vector2(238, 179)
 texture = ExtResource("5_ropn6")
 region_enabled = true
 region_rect = Rect2(112, 0, 96, 256)
+metadata/_edit_lock_ = true
 
 [node name="3" type="Sprite2D" parent="Decorations/Background/Tree"]
 position = Vector2(334, 179)
 texture = ExtResource("5_ropn6")
 region_enabled = true
 region_rect = Rect2(112, 0, 96, 256)
+metadata/_edit_lock_ = true
 
 [node name="4" type="Sprite2D" parent="Decorations/Background/Tree"]
 position = Vector2(428, 179)
 texture = ExtResource("5_ropn6")
 region_enabled = true
 region_rect = Rect2(112, 0, 96, 256)
+metadata/_edit_lock_ = true
