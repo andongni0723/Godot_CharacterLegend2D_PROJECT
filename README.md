@@ -17,6 +17,14 @@
 
 ### Player
 
+#### Gravity
+
+```csharp
+private float _defaultGravity = 
+    ProjectSettings.GetSetting("physics/2d/default_gravity").AsSingle();
+```
+設定重力
+
 #### Move
 
 ```csharp
@@ -102,3 +110,137 @@ public override void _PhysicsProcess(double delta)
 
 **[_animationPlayer].Play("name")** : 
 播放動畫("name")
+
+
+### State Machine
+
+
+#### StateMachine.cs (Base)
+
+```csharp
+using Godot;
+using System;
+
+public partial class StateMachine : Node
+{
+    private int currentState = 1; // Use int to replace the enum ,
+                                  // because the other state enum name is not different
+    public int CurrentState
+    {
+        get => currentState;
+        set
+        {
+            currentState = value;
+            GetParent<CharacterController>().TransitionToState((State)currentState, (State)value);
+        }
+    }
+
+    public override async void _Ready()
+    {
+        await ToSignal(Owner, "ready");
+        CurrentState = 0;
+    }
+
+    public override void _PhysicsProcess(double delta)
+    {
+        int nextState = (int)GetParent<CharacterController>().GetNextState((State)CurrentState);
+        if (nextState != CurrentState)
+        {
+            CurrentState = nextState;
+        }
+        
+        GetParent<CharacterController>().TickPhysics((State)CurrentState, delta);
+    }
+}
+
+```
+
+**GetParent\<T\>()** :
+得到父類的T組件 (GodotScript是用 "owner") 
+    
+**await**:
+像是Unity的 yield return
+    
+**ToSignal(Object, signalName)**:
+確定物件的基本函數已經執行
+
+#### Player狀態機 架構
+    
+```csharp
+public enum State
+{
+	IDLE //...
+}
+
+public partial class PlayerController : CharacterController
+{
+    /// <summary>
+    /// What do you do in this frame by State?
+    /// </summary>
+    /// <param name="state"></param>
+    /// <param name="delta"></param>
+    public override void TickPhysics(State state, double delta)
+    {
+        switch (state)
+        {
+            case State.IDLE:
+                // doing Physics (like move)
+                break;
+                
+            //...
+        }         
+    }
+    
+    /// <summary>
+    /// Can to change State?
+    /// </summary>
+    /// <param name="state"></param>
+    /// <returns></returns>
+    public override State GetNextState(State state)
+    {
+        switch(state)
+        {
+            case State.IDLE:
+                // Check to let 'State.IDLE' to other state
+                break;
+            
+            //...
+        }
+    }
+    
+    /// <summary>
+    /// What do you do when you change State? (a frame)
+    /// </summary>
+    /// <param name="from"></param>
+    /// <param name="to"></param>
+    public override void TransitionToState(State from, State to)
+    {
+        switch(to)
+        {
+            case State.IDLE:
+                // do something (like animation)
+                break;
+                
+            //...
+        }
+    }
+}
+```
+
+#### 小技巧 (抽象類)
+
+```csharp
+using Godot;
+using System;
+
+public abstract partial class CharacterController : CharacterBody2D
+{
+    public abstract void TickPhysics(State state, double delta);
+    public abstract State GetNextState(State state);
+    public abstract void TransitionToState(State from, State to);
+
+}
+
+```
+
+讓所有角色類Script都繼承 "CharacterController"， 強制讓他們都必須要Override那三個函式
