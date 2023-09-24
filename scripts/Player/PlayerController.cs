@@ -4,13 +4,14 @@ using System.Collections.Generic;
 
 public enum State
 {
-	IDLE, RUNNING, JUMPING, FALLING, LANDING
+	IDLE, RUNNING, JUMPING, FALLING, LANDING, WALL_SLIDING, WALL_JUMPING
 }
 
 public partial class PlayerController : CharacterController
 {
 	private const float RUN_SPEED = 160f;
 	private const float JUMP_SPEED = 350f;
+	private static readonly Vector2 WALL_JUMP_SPEED = new Vector2(500, -300);
 	private const float FLOOR_ACCELERATION = RUN_SPEED / 0.2f;
 	private const float AIR_ACCELERATION = RUN_SPEED / 0.02f;
 	private static readonly List<State> groundStates = new List<State> {State.IDLE, State.RUNNING, State.LANDING};
@@ -22,10 +23,12 @@ public partial class PlayerController : CharacterController
 	private bool _isOnFloorBeforeMove = false;
 	
 	// Components
-	Sprite2D _sprite => GetNode<Sprite2D>("Sprite2D");
+	Node2D _graphics => GetNode<Node2D>("Graphics");
 	AnimationPlayer _animationPlayer => GetNode<AnimationPlayer>("AnimationPlayer");
 	Timer _coyoteTimer => GetNode<Timer>("CoyoteTimer");
 	Timer _jumpRequestTimer => GetNode<Timer>("JumpRequestTimer");
+	RayCast2D _handChecker => GetNode<RayCast2D>("Graphics/HandChecker");
+	RayCast2D _footChecker => GetNode<RayCast2D>("Graphics/FootChecker");
 
 	public override void _UnhandledInput(InputEvent @event)
 	{
@@ -71,6 +74,15 @@ public partial class PlayerController : CharacterController
 			case State.LANDING:
 				Move(_defaultGravity, delta);
 				break;
+			
+			case State.WALL_SLIDING:
+				Move(_defaultGravity / 3, delta);
+				_graphics.Scale = new Vector2(GetWallNormal().X, Scale.Y);
+				break;
+			
+			case State.WALL_JUMPING:
+				Move(_isFirstFrame? 0 : _defaultGravity, delta);
+				break;
 		}
 
 		_isFirstFrame = false;
@@ -85,11 +97,11 @@ public partial class PlayerController : CharacterController
 		float _acceleration = IsOnFloor() ? FLOOR_ACCELERATION : AIR_ACCELERATION;
 		
 		Velocity = new Vector2(Mathf.MoveToward(Velocity.X, _direction * RUN_SPEED, _acceleration * (float)delta),
-			Velocity.Y + _defaultGravity * (float)delta);
+			Velocity.Y + gravity * (float)delta);
 
 		// Flip sprite
 		if(_direction != 0) 
-			_sprite.FlipH = _direction < 0;
+			_graphics.Scale = new Vector2(_direction > 0 ? 1 : -1, Scale.Y);
 
 		_isOnFloorBeforeMove = IsOnFloor();
 		MoveAndSlide();	
@@ -138,15 +150,31 @@ public partial class PlayerController : CharacterController
 			
 			case State.FALLING:
 				if (IsOnFloor())
-				{
-					_animationPlayer.Stop();
 					return State.LANDING;	
-				}
+
+				if (IsOnWall() && _handChecker.IsColliding() && _footChecker.IsColliding())
+					return State.WALL_SLIDING;
+
+				
 				break;
 			
 			case State.LANDING:
 				if (!_animationPlayer.IsPlaying())
 					return State.IDLE;
+				break;
+			
+			case State.WALL_SLIDING:
+				if (_jumpRequestTimer.TimeLeft > 0)
+					return State.WALL_JUMPING;
+				if(IsOnFloor())
+					return State.IDLE;
+				if (!IsOnWall())
+					return State.FALLING;
+				break;
+			
+			case State.WALL_JUMPING:
+				if (Velocity.Y >= 0)
+					return State.FALLING;	
 				break;
 		}
 		
@@ -192,8 +220,23 @@ public partial class PlayerController : CharacterController
 			case State.LANDING:
 				_animationPlayer.Play("landing");
 				break;
+			
+			case State.WALL_SLIDING:
+				_animationPlayer.Play("wall_sliding");
+				break;
+			
+			case State.WALL_JUMPING:
+				_animationPlayer.Play("jump");
+				Velocity = new Vector2(WALL_JUMP_SPEED.X * GetWallNormal().X, WALL_JUMP_SPEED.Y);
+				_jumpRequestTimer.Stop();
+				break;
 		}
 
+		if (to == State.WALL_JUMPING)
+			Engine.TimeScale = 0.3;
+		if (from == State.WALL_JUMPING)
+			Engine.TimeScale = 1;
+	
 		_isFirstFrame = true;
 	}
 }

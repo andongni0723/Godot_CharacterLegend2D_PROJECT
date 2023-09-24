@@ -27,6 +27,10 @@ window/stretch/mode="canvas_items"
 
 project/assembly_name="CharacterLegend2D"
 
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/com.timothyqiu.animation-resetter/plugin.cfg")
+
 [input]
 
 move_left={
