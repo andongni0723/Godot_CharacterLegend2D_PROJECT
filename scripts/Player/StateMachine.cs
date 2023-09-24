@@ -3,16 +3,19 @@ using System;
 
 public partial class StateMachine : Node
 {
-    private int currentState = 1;
+    private int _currentState = 1;
     public int CurrentState
     {
-        get => currentState;
+        get => _currentState;
         set
         {
-            currentState = value;
-            GetParent<CharacterController>().TransitionToState((State)currentState, (State)value);
+            _currentState = value;
+            GetParent<CharacterController>().TransitionToState((State)_currentState, (State)value);
+            stateTime = 0f;
         }
     }
+    
+    public float stateTime = 0f;
 
     public override async void _Ready()
     {
@@ -29,5 +32,6 @@ public partial class StateMachine : Node
         }
         
         GetParent<CharacterController>().TickPhysics((State)CurrentState, delta);
+        stateTime += (float)delta;
     }
 }

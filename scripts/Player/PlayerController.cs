@@ -11,9 +11,9 @@ public partial class PlayerController : CharacterController
 {
 	private const float RUN_SPEED = 160f;
 	private const float JUMP_SPEED = 350f;
-	private static readonly Vector2 WALL_JUMP_SPEED = new Vector2(500, -300);
+	private static readonly Vector2 WALL_JUMP_SPEED = new Vector2(400, -300);
 	private const float FLOOR_ACCELERATION = RUN_SPEED / 0.2f;
-	private const float AIR_ACCELERATION = RUN_SPEED / 0.02f;
+	private const float AIR_ACCELERATION = RUN_SPEED / 0.1f;
 	private static readonly List<State> groundStates = new List<State> {State.IDLE, State.RUNNING, State.LANDING};
 	private float _defaultGravity = ProjectSettings.GetSetting("physics/2d/default_gravity").AsSingle();
 
@@ -24,6 +24,7 @@ public partial class PlayerController : CharacterController
 	
 	// Components
 	Node2D _graphics => GetNode<Node2D>("Graphics");
+	StateMachine _stateMachine => GetNode<StateMachine>("StateMachine");
 	AnimationPlayer _animationPlayer => GetNode<AnimationPlayer>("AnimationPlayer");
 	Timer _coyoteTimer => GetNode<Timer>("CoyoteTimer");
 	Timer _jumpRequestTimer => GetNode<Timer>("JumpRequestTimer");
@@ -72,7 +73,7 @@ public partial class PlayerController : CharacterController
 				break;
 			
 			case State.LANDING:
-				Move(_defaultGravity, delta);
+				Stand(_defaultGravity, delta);
 				break;
 			
 			case State.WALL_SLIDING:
@@ -81,7 +82,15 @@ public partial class PlayerController : CharacterController
 				break;
 			
 			case State.WALL_JUMPING:
-				Move(_isFirstFrame? 0 : _defaultGravity, delta);
+				if (_stateMachine.stateTime < 0.1f)
+				{
+					Stand(_isFirstFrame? 0 : _defaultGravity, delta);
+					_graphics.Scale = new Vector2(GetWallNormal().X, Scale.Y);
+				}
+				else
+				{
+					Move(_defaultGravity, delta);
+				}
 				break;
 		}
 
@@ -105,6 +114,20 @@ public partial class PlayerController : CharacterController
 
 		_isOnFloorBeforeMove = IsOnFloor();
 		MoveAndSlide();	
+	}
+	
+	private void Stand(float gravity, double delta)
+	{
+		float _acceleration = IsOnFloor() ? FLOOR_ACCELERATION : AIR_ACCELERATION;	
+		Velocity = new Vector2(Mathf.MoveToward(Velocity.X, 0, _acceleration * (float)delta),
+			Velocity.Y + _defaultGravity * (float)delta);
+		
+		MoveAndSlide();
+	}
+
+	private bool CanWallSlide()
+	{
+		return IsOnWall() && _handChecker.IsColliding() && _footChecker.IsColliding();
 	}
 
 
@@ -152,10 +175,8 @@ public partial class PlayerController : CharacterController
 				if (IsOnFloor())
 					return State.LANDING;	
 
-				if (IsOnWall() && _handChecker.IsColliding() && _footChecker.IsColliding())
+				if (CanWallSlide())
 					return State.WALL_SLIDING;
-
-				
 				break;
 			
 			case State.LANDING:
@@ -173,6 +194,10 @@ public partial class PlayerController : CharacterController
 				break;
 			
 			case State.WALL_JUMPING:
+				if (CanWallSlide() && !_isFirstFrame)
+				{
+					return State.WALL_SLIDING;
+				}
 				if (Velocity.Y >= 0)
 					return State.FALLING;	
 				break;
@@ -231,12 +256,7 @@ public partial class PlayerController : CharacterController
 				_jumpRequestTimer.Stop();
 				break;
 		}
-
-		if (to == State.WALL_JUMPING)
-			Engine.TimeScale = 0.3;
-		if (from == State.WALL_JUMPING)
-			Engine.TimeScale = 1;
-	
+		
 		_isFirstFrame = true;
 	}
 }
